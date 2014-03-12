@@ -590,6 +590,7 @@ subtest "phone number is not mandatory for reports from mobile apps" => sub {
             email => 'user@example.org',
             pc => '',
             name => '',
+            category => 'bad category',
         });
         my $res = $mech->response;
         ok $res->header('Content-Type') =~ m{^application/json\b}, 'response should be json';

@@ -565,6 +565,7 @@ subtest "phone number is mandatory" => sub {
         MAPIT_TYPES => [ 'O08' ],
         MAPIT_URL => 'http://global.mapit.mysociety.org/',
         ALLOWED_COBRANDS => [ 'zurich' ],
+        MAPIT_ID_WHITELIST => [ 423017 ],
     }, sub {
         $user = $mech->log_in_ok( 'dm1@example.org' );
         $mech->get_ok( '/report/new?lat=47.381817&lon=8.529156' );
@@ -578,6 +579,8 @@ subtest "phone number is not mandatory for reports from mobile apps" => sub {
     FixMyStreet::override_config {
         MAPIT_TYPES => [ 'O08' ],
         MAPIT_URL => 'http://global.mapit.mysociety.org/',
+        ALLOWED_COBRANDS => [ 'zurich' ],
+        MAPIT_ID_WHITELIST => [ 423017 ],
     }, sub {
         $mech->post_ok( '/report/new/mobile?lat=47.381817&lon=8.529156' , {
             service => 'iPhone',

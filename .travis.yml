@@ -17,7 +17,9 @@ before_install:
   - cpanm -q Carton Locale::gettext Math::BigInt::GMP
   - sudo locale-gen cy_GB.UTF-8 en_GB.UTF-8 nb_NO.UTF-8 de_CH.UTF-8 sv_SE.UTF-8
 install:
-  - carton install --deployment
+  - git clone git://github.com/mysociety/fixmystreet-bundle.git
+  - ln -s fixmystreet-bundle/vendor ./vendor
+  - carton install --cached --deployment
 before_script:
   - psql -c 'create database fms;' -U postgres
   - psql fms postgres < db/schema.sql

@@ -1,0 +1,50 @@
+<div id="front-main">
+    <div id="front-main-container">
+        [% IF c.cobrand.moniker == 'fixmybarangay' %]
+            <h1>View local problems</h1>
+            <h2>(potholes or street lighting)</h2>
+        [% ELSE %]
+            [% INCLUDE 'around/intro.html' %]
+        [% END %]
+
+        [%
+            question = c.cobrand.enter_postcode_text || loc('Enter a nearby street name and area');
+        %]
+
+        [% IF c.cobrand.moniker == 'fixmybarangay' %]
+            [% INCLUDE '_barangay_buttons.html' %]
+        [% ELSE %]
+        <div id="postcodeForm">
+            <form action="[% c.uri_for('/around') %]" method="get" name="postcodeForm">
+                <label for="pc">[% question %]:</label>
+                <div>
+                    <input type="text" name="pc" value="[% pc | html %]" id="pc" size="10" maxlength="200" placeholder="[% tprintf(loc('e.g. ‘%s’ or ‘%s’'), c.cobrand.example_places) %]">
+                    <input type="submit" value="[% loc('Go') %]" id="sub">
+                </div>
+
+                [% IF partial_token %]
+                    <input type="hidden" name="partial" value="[% partial_token.token %]">
+                [% END %]
+
+            </form>
+            <form action="[% c.uri_for( '/report' ) %]/" method="get" name="clinicForm">
+                <label for="clinic">[% loc('... or select a clinic by name' ) %]</label>
+                <div>
+                    <select id="clinic" name="clinic">
+                        [% FOR clinic IN c.cobrand.get_clinic_list %]
+                        <option value="[% clinic.id %]">[% clinic.title %]</option>
+                        [% END %]
+                    </select>
+                    <input class="green-btn" type="submit" value="[% loc('Go') %]" id="show_report">
+                </div>
+            </form>
+        </div>
+
+        [% END %]
+    </div>
+    [% IF c.cobrand.moniker == 'fixmystreet' %]
+        <div style="max-width: 30em; margin: 1em auto;">
+        We're running a survey to help us understand who uses our sites. If you have 10-15 minutes to spare then we'd be grateful if you could <a href="http://questions.mysociety.org/S/fms/w/" target="_blank">take part</a>.
+        </div>
+    [% END %]
+</div>

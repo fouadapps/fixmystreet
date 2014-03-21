@@ -11,6 +11,7 @@ use mySociety::Locale;
 use mySociety::MaPit;
 use IO::String;
 use RABX;
+use DateTime::Format::Pg;
 
 # Child must have confirmed, id, email, state(!) columns
 # If parent/child, child table must also have name and text
@@ -29,6 +30,7 @@ sub email_alerts ($) {
             $query .= "
                    $item_table.id as item_id, $item_table.text as item_text,
                    $item_table.name as item_name, $item_table.anonymous as item_anonymous,
+                   $item_table.confirmed as item_confirmed,
                    $head_table.*
             from alert
                 inner join $item_table on alert.parameter::integer = $item_table.${head_table}_id
@@ -114,6 +116,7 @@ sub email_alerts ($) {
                     $data{problem_url} = $url . "/report/" . $row->{id};
                 }
                 $data{data} .= $row->{item_name} . ' : ' if $row->{item_name} && !$row->{item_anonymous};
+                $data{data} .= $cobrand->prettify_dt( DateTime::Format::Pg->parse_datetime( $row->{item_confirmed} ), 'alert' ) . "\n\n" if $cobrand->include_time_in_update_alerts;
                 $data{data} .= $row->{item_text} . "\n\n------\n\n";
             # this is ward and council problems
             } else {

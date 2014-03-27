@@ -75,20 +75,41 @@ while ( my $row = $csv->getline( $fh ) ) {
     }
     $p->discard_changes;
 
+    # disabling existing alerts in case email addresses have changed
+    my $existing = FixMyStreet::App->model('DB::Alert')->search({
+        alert_type => 'new_updates',
+        parameter => $p->id
+    });
+    $existing->update( { confirmed => 0 } );
+
     if ( $row->[EMAIL] ) {
-        my $u = FixMyStreet::App->model('DB::User')->find_or_create({
+        my $u = FixMyStreet::App->model('DB::User')->find_or_new({
             email => $row->[EMAIL]
         });
         $u->insert unless $u->in_storage;
-        my $a = FixMyStreet::App->model('DB::Alert')->find_or_create({
-            alert_type => 'new_updates',
-            user => $u,
-            parameter => $p->id
-        });
-        unless ( $a->in_storage ) {
-            printf( "Creating update alert for %s on %s\n", $row->[EMAIL], $row->[TITLE] )
-                if $opt->verbose;
-            $a->insert;
-        }
+        create_update_alert( $u, $p, $opt->verbose );
+    }
+
+    create_update_alert( $clinic_user, $p, $opt->verbose );
+}
+
+sub create_update_alert {
+    my ( $user, $p, $verbose ) = @_;
+    my $a = FixMyStreet::App->model('DB::Alert')->find_or_new({
+        alert_type => 'new_updates',
+        user => $user,
+        parameter => $p->id,
+    });
+
+    $a->confirmed(1);
+
+    if ( $a->in_storage ) {
+        printf( "Updating update alert for %s on %s\n", $user->email, $p->title )
+            if $verbose;
+        $a->update;
+    } else {
+        printf( "Creating update alert for %s on %s\n", $user->email, $p->title )
+            if $verbose;
+        $a->insert;
     }
 }

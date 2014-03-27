@@ -2,22 +2,28 @@
 
 use strict;
 use FixMyStreet::App;
-use mySociety::Config;
 use Text::CSV;
+use Getopt::Long::Descriptive;
 
 use constant TITLE => 0;
 use constant DESC => 1;
 use constant LATLONG => 2;
 use constant EMAIL => 3;
 
-my $file = shift;
+my ($opt, $usage) = describe_options(
+    '%c %o',
+    ['file|f=s',  "path to csv file with list of clinics", { required => 1 } ],
+    ['email|e=s', "default email address for the updates to be sent to", { required => 1 } ],
+    ['help',    "print usage message and exit" ],
+);
+print($usage->text), exit if $opt->help;
 
 my $csv = Text::CSV->new ( { binary => 1 } )  # should set binary attribute.
                 or die "Cannot use CSV: ".Text::CSV->error_diag ();
-open my $fh, "<:encoding(utf8)", $file or die "Failed to open $file: $!";
+open my $fh, "<:encoding(utf8)", $opt->file or die "Failed to open " . $opt->file . ": $!";
 
 my $clinic_user = FixMyStreet::App->model('DB::User')->find_or_create({
-    email => mySociety::Config::get('CONTACT_EMAIL')
+    email => $opt->email
 });
 if ( not $clinic_user->in_storage ) {
     $clinic_user->insert;

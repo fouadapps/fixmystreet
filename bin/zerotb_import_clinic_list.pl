@@ -14,6 +14,7 @@ my ($opt, $usage) = describe_options(
     '%c %o',
     ['file|f=s',  "path to csv file with list of clinics", { required => 1 } ],
     ['email|e=s', "default email address for the updates to be sent to", { required => 1 } ],
+    ['verbose|v',  "print out all services as they are found"],
     ['help',    "print usage message and exit" ],
 );
 print($usage->text), exit if $opt->help;
@@ -65,19 +66,29 @@ while ( my $row = $csv->getline( $fh ) ) {
     $p->longitude( $long );
     $p->confirm;
 
-    $p->in_storage ? $p->update : $p->insert;
+    if ( $p->in_storage ) {
+        printf( "Updating entry for %s\n", $row->[TITLE] ) if $opt->verbose;
+        $p->update;
+    } else {
+        printf( "Creating entry for %s\n", $row->[TITLE] ) if $opt->verbose;
+        $p->insert;
+    }
     $p->discard_changes;
 
     if ( $row->[EMAIL] ) {
         my $u = FixMyStreet::App->model('DB::User')->find_or_create({
             email => $row->[EMAIL]
         });
-        $u->insert unless  $u->in_storage;
+        $u->insert unless $u->in_storage;
         my $a = FixMyStreet::App->model('DB::Alert')->find_or_create({
             alert_type => 'new_updates',
             user => $u,
             parameter => $p->id
         });
-        $a->insert unless $a->in_storage();
+        unless ( $a->in_storage ) {
+            printf( "Creating update alert for %s on %s\n", $row->[EMAIL], $row->[TITLE] )
+                if $opt->verbose;
+            $a->insert;
+        }
     }
 }
